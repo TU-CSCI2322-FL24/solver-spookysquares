@@ -2,9 +2,10 @@
 
 type Point = (Int, Int)
 type Edge = (Point, Point)
-type Box = ([Edge], Int)
+type Box = Point
 type Board = [[Box]]
 
 type Game = Board
 type Move = Edge
-type PlayerTurn = Bool
+type Player1 = Int
+type Player2 = Int
