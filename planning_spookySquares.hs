@@ -1,9 +1,9 @@
 ------------- Planning -------------
 
 type Point = (Int, Int)
-type Edge = (Point, Point)
+type Edge = (Point, Int) -- change type
 type Box = Point
-type Board = [[Box]]
+type Board = [[Box]] -- change
 
 type Game = Board
 type Move = Edge
