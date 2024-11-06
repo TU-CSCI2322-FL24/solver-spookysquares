@@ -7,4 +7,4 @@ type Board = [[Box]]
 
 type Game = Board
 type Move = Edge
-type playerTurn = Bool
+type PlayerTurn = Bool
