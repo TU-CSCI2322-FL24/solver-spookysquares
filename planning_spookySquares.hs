@@ -24,7 +24,7 @@ p2Move = ((0,1), Down)
 makeMove :: Game -> Move -> Game
 makeMove game move = undefined
 
---this function checks if the move exceeds the grid limits (and if edge is already in game?)
+--this function checks if the move exceeds the grid limits
 validMove :: Game -> Move -> Bool
 validMove game move =
     let point = fst move
@@ -36,15 +36,32 @@ validMove game move =
         checkEmpty = undefined -- check if point and direction is already filled in 
     in boardLimit && 
 
+
+
+-- type Player = Int -- 1 or 2
+-- type Line = (Int, Int, Int, Int) -- x1, y1, x2, y2
+-- type Score = (Int, Int)
+-- type Board = [[Int]] -- 0 for no line, 1 for line
+--
+-- data GameState = GameState {
+--     currentPlayer :: Player,
+--     board :: Board,
+--     score :: Score
+-- } deriving Show
+
+-- branch b test
+
+
+
+
 -- Planing 12:30 --
 
-type Game = Board
-type Board = [[Point]]
-type Move = Edge
-
-type Point = (Int, Int)
-type Edge = (Point, Point) -- cause an edge has end points (so the edge is the stuff between the points)
-type Box = [Edge]
+--type Game = Board
+--type Board = [[Point]]
+--type Move = Edge
+--
+--type Point = (Int, Int)
+--type Edge = (Point, Point) -- cause an edge has end points (so the edge is the stuff between the points)
+--type Box = [Edge]
 
 -- Shared Planning Doc: https://docs.google.com/document/d/14zdDI9YBC7k1rin2WbVVFhhn5QvC527lzKjWfOn1nJY/edit?tab=t.0
-
