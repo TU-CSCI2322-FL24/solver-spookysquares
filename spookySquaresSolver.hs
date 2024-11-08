@@ -1,4 +1,4 @@
 type Point = (Int, Int)
-type Edge = (Point, Direction)
+type Edge = (Point, Point)
 type Box = Point
 type Board = [[Box]]
