@@ -21,7 +21,8 @@ type Winner = Player
 
 -- Story 4 : Compute the legal moves from a game state, use a function Game -> [Move]
 -- Gael, Molly
-
+legalMoves :: Game -> [Move]
+legalMoves game = undefined
 
 -- Story 5 : Pretty-print a game into a string, create a function Game -> String
 -- you should NOT override the "Show" typeclass. 
