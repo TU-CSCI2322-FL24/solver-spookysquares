@@ -6,7 +6,7 @@ type Board = [Line]
 
 -- Game type is a 4-tuple containing the complete board, the active player, the completed boxes, and the history of moves
 type Game = (Board, Player, [Box], [Move])
-data Player = PlayerOne | PlayerTwo deriving (Show)
+data Player = PlayerOne | PlayerTwo deriving (Eq, Show)
 type Move = Line
 type Winner = Player
 
@@ -44,6 +44,13 @@ calcBox box =
 -- Story 2 : Determine who has won the game. Write a function Game -> Winner
 -- Ana, Adrian
 
+gameWinner :: Game -> Maybe Winner
+gameWinner game =
+    let boxes = gameBoxes game
+        gameOver = null (legalMoves game)
+        p1Points = length [box | box <- boxes, snd box == PlayerOne]
+        p2Points = length [box | box <- boxes, snd box == PlayerTwo]
+    in if p1Points > p2Points && gameOver then Just PlayerOne else if p2Points > p1Points && gameOver then Just PlayerTwo else Nothing
 
 -- Story 3 : Compute the result of making a legal move in a game state, write a function of type
 -- Game -> Move -> Game
