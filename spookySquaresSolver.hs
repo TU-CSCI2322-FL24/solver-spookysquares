@@ -17,6 +17,7 @@ allLines = [((0,0), Horizontal), ((0,1), Horizontal), ((0,2), Horizontal), ((0,3
 
 
 -- to calc all lines in given box. input box of ((0,0), Player1)
+-- TO DO : When checking if a box is Valid you only need to check first line and the vertical of that one Ex. check (0,0, Horizontal), (0,0, Vertical)
 calcBox :: Box -> [Line]
 calcBox box = 
     let point = fst box
