@@ -7,6 +7,7 @@ type Board = [Line]
 data Player = PlayerOne | PlayerTwo
 type Game = (Board, Player, [Box])
 type Move = Line
+type Winner = Player
 
 
 -- Story 2 : Determine who has won the game. Write a function Game -> Winner
