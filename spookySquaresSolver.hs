@@ -53,8 +53,47 @@ gameWinner game =
     in if p1Points > p2Points && gameOver then Just PlayerOne else if p2Points > p1Points && gameOver then Just PlayerTwo else Nothing
 
 -- Story 3 : Compute the result of making a legal move in a game state, write a function of type
--- Game -> Move -> Game
--- Emma
+-- Emma 
+makeMove :: Game -> Move -> Game
+makeMove game move =
+    let currentBoard = gameBoard game
+        currentPlayer = gamePlayer game
+        currentBoxes = gameBoxes game
+        currentMoves = gameMoves game
+
+        -- updates moves by adding the new move
+        newMoves = move : currentMoves
+
+        -- checks if a specific box is completed
+        isBoxCompleted :: Point -> Bool
+        isBoxCompleted point =
+            let horizontalTop = (point, Horizontal)
+                horizontalBottom = ((fst point + 1, snd point), Horizontal)
+                verticalLeft = (point, Vertical)
+                verticalRight = ((fst point, snd point + 1), Vertical)
+            in  horizontalTop `elem` newMoves &&
+                horizontalBottom `elem` newMoves &&
+                verticalLeft `elem` newMoves &&
+                verticalRight `elem` newMoves
+
+        -- collects the completed boxes after hte move
+        allPoints = [(x,y) | x <- [0..3], y <- [0..3]] --change later when grid size gets bigger
+        completedBoxes = [(point ,currentPlayer) | point <- allPoints, isBoxCompleted point, point `notElem` map fst currentBoxes]
+
+        -- updates the boxes
+        newBoxes = completedBoxes ++ currentBoxes
+
+        -- Determines next player
+        nextPlayer = if null completedBoxes then switchPlayer currentPlayer
+                     else currentPlayer
+
+    in (currentBoard, nextPlayer, newBoxes, newMoves)
+
+-- Helper to switch player
+switchPlayer :: Player -> Player
+switchPlayer PlayerOne = PlayerTwo
+switchPlayer PlayerTwo = PlayerOne
+
 
 
 -- Story 4 : Compute the legal moves from a game state, use a function Game -> [Move]
