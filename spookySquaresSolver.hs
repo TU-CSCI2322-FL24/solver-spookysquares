@@ -56,38 +56,36 @@ gameWinner game =
 -- Emma 
 makeMove :: Game -> Move -> Game
 makeMove game move =
-    let currentBoard = gameBoard game
-        currentPlayer = gamePlayer game
-        currentBoxes = gameBoxes game
-        currentMoves = gameMoves game
+    let board = gameBoard game
+        player = gamePlayer game
+        boxes = gameBoxes game
+        moves = gameMoves game
 
         -- updates moves by adding the new move
-        newMoves = move : currentMoves
+        newMoves = move : moves
 
         -- checks if a specific box is completed
         isBoxCompleted :: Point -> Bool
         isBoxCompleted point =
-            let horizontalTop = (point, Horizontal)
-                horizontalBottom = ((fst point + 1, snd point), Horizontal)
-                verticalLeft = (point, Vertical)
-                verticalRight = ((fst point, snd point + 1), Vertical)
-            in  horizontalTop `elem` newMoves &&
-                horizontalBottom `elem` newMoves &&
-                verticalLeft `elem` newMoves &&
-                verticalRight `elem` newMoves
+            let top = (point, Horizontal)
+                bottom = ((fst point + 1, snd point), Horizontal)
+                left = (point, Vertical)
+                right = ((fst point, snd point + 1), Vertical)
+            in  all (`elem` newMoves) [top, bottom, left, right]
 
         -- collects the completed boxes after hte move
-        allPoints = [(x,y) | x <- [0..3], y <- [0..3]] --change later when grid size gets bigger
-        completedBoxes = [(point ,currentPlayer) | point <- allPoints, isBoxCompleted point, point `notElem` map fst currentBoxes]
+        completedBoxes = [(point, player) | point <- [(x, y) | x <- [0..3], y <- [0..3]],
+                           isBoxCompleted point,
+                           point `notElem` map fst boxes]
 
         -- updates the boxes
-        newBoxes = completedBoxes ++ currentBoxes
+        newBoxes = completedBoxes ++ boxes
 
         -- Determines next player
-        nextPlayer = if null completedBoxes then switchPlayer currentPlayer
-                     else currentPlayer
+        nextPlayer = if null completedBoxes then switchPlayer player
+                     else player
 
-    in (currentBoard, nextPlayer, newBoxes, newMoves)
+    in (board, nextPlayer, newBoxes, newMoves)
 
 -- Helper to switch player
 switchPlayer :: Player -> Player
