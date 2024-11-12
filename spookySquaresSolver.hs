@@ -37,8 +37,8 @@ gameStateExample = (allLines, PlayerOne, gameStateBoxes, gameStateMoves)
 calcBox :: Box -> [Line]
 calcBox box =
     let point = fst box
-        horPoint = (fst point + 1, snd point)
-        vertPoint = (fst point, snd point + 1)
+        horPoint = (fst point, snd point + 1)
+        vertPoint = (fst point + 1, snd point)
     in [boxLines | boxLines <- allLines, (point, Horizontal) == boxLines || (point, Vertical) == boxLines || (horPoint, Horizontal) == boxLines || (vertPoint, Vertical) == boxLines]
 
 -- Story 2 : Determine who has won the game. Write a function Game -> Winner
