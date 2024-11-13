@@ -117,29 +117,28 @@ isLegalMove game move =
 -- you should NOT override the "Show" typeclass. 
 -- Aidan
 prettyPrint :: Game -> String
-prettyPrint (board, _, boxes, moves) = unlines $ concatMap renderRow [0 .. maxRow]
+prettyPrint (board, _, boxes, moves) = unlines $ concatMap renderRow [0 .. size]
   where
     -- determine board size dynamically
-    maxRow = 4
-    maxCol = 4
+    size = 4
 
 
     -- Render a single row of the game
     renderRow :: Int -> [String]
     renderRow row
-      | row < maxRow = [renderHorizontal row, renderVertical row]
+      | row < size = [renderHorizontal row, renderVertical row]
       | otherwise = [renderHorizontal row] -- only horizontal line for the last row
 
     -- render horizontal lines and dots for a specific row
     renderHorizontal :: Int -> String
     renderHorizontal row =
-      concatMap (\col -> renderDot ++ renderHLine (col, row)) [0 .. maxCol -1 ] ++ renderDot
+      concatMap (\col -> renderDot ++ renderHLine (col, row)) [0 .. size -1 ] ++ renderDot
 
     -- render vertical lines and boxes for a specific row
     renderVertical :: Int -> String
     renderVertical row =
-      concatMap (\col -> renderVLine (col, row) ++ renderBox (col, row)) [0 .. maxCol -1 ]
-      ++ renderVLine (row, maxCol-1) -- Last vertical line in the row
+      concatMap (\col -> renderVLine (col, row) ++ renderBox (col, row)) [0 .. size -1 ]
+      ++ renderVLine (row, size-1) -- Last vertical line in the row
 
     -- render a dot
     renderDot :: String
