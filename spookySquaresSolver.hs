@@ -68,12 +68,12 @@ makeMove game move =
         isBoxCompleted :: Point -> Bool
         isBoxCompleted point =
             let top = (point, Horizontal)
-                bottom = ((fst point + 1, snd point), Horizontal)
+                bottom = ((fst point , snd point +1), Horizontal)
                 left = (point, Vertical)
-                right = ((fst point, snd point + 1), Vertical)
+                right = ((fst point + 1 , snd point), Vertical)
             in  all (`elem` newMoves) [top, bottom, left, right]
 
-        -- collects the completed boxes after hte move
+        -- collects the completed boxes after the move
         completedBoxes = [(point, player) | point <- [(x, y) | x <- [0..3], y <- [0..3]],
                            isBoxCompleted point,
                            point `notElem` map fst boxes]
