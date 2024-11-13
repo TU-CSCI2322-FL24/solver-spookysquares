@@ -10,6 +10,10 @@ data Player = PlayerOne | PlayerTwo deriving (Eq, Show)
 type Move = Line
 type Winner = Player
 
+--calcBoard to create a board from a given int size (always a perfect square)
+calcBoard :: Int -> Board
+calcBoard size = ([((x,y), Horizontal) | x <- [0..size - 1], y <- [0..size]] ++ [((x,y), Vertical) | x <- [0..size], y <- [0..size - 1]])
+
 --Helper functions to get values from Game type
 gameBoard :: Game -> Board
 gameBoard (board, _, _, _) = board
