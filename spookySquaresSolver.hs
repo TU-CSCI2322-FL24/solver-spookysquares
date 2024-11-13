@@ -28,7 +28,7 @@ allLines = [((0,0), Horizontal), ((0,1), Horizontal), ((0,2), Horizontal), ((0,3
 
 -- temporary declaration to test functions - This is a game state example
 gameStateBoxes = [((0,0), PlayerTwo), ((0,1), PlayerTwo), ((1,1), PlayerOne)]
-gameStateMoves = [((0,0), Horizontal), ((3,0), Horizontal), ((0,1), Horizontal), ((0,2), Horizontal), ((1,1), Horizontal), ((1,2), Horizontal), ((2,3), Horizontal), ((0,0), Vertical), ((0,1), Vertical), ((1,0), Vertical), ((1,1), Vertical), ((1,2), Vertical), ((2,2), Vertical), ((3,2), Vertical)]
+gameStateMoves = [((0,0), Horizontal), ((2,0), Horizontal), ((0,1), Horizontal), ((0,2), Horizontal), ((1,1), Horizontal), ((1,2), Horizontal), ((2,3), Horizontal), ((0,0), Vertical), ((0,1), Vertical), ((1,0), Vertical), ((1,1), Vertical), ((1,2), Vertical), ((2,1), Vertical), ((3,1), Vertical)]
 gameStateExample :: Game
 gameStateExample = (allLines, PlayerOne, gameStateBoxes, gameStateMoves)
 
@@ -112,6 +112,58 @@ isLegalMove game move =
 -- Story 5 : Pretty-print a game into a string, create a function Game -> String
 -- you should NOT override the "Show" typeclass. 
 -- Aidan
+prettyPrint :: Game -> String
+prettyPrint (board, _, boxes, moves) = unlines $ concatMap renderRow [0 .. maxRow]
+  where
+    -- determine board size dynamically
+    maxRow = 4
+    maxCol = 4
+
+
+    -- Render a single row of the game
+    renderRow :: Int -> [String]
+    renderRow row
+      | row < maxRow = [renderHorizontal row, renderVertical row]
+      | otherwise = [renderHorizontal row] -- only horizontal line for the last row
+
+    -- render horizontal lines and dots for a specific row
+    renderHorizontal :: Int -> String
+    renderHorizontal row =
+      concatMap (\col -> renderDot ++ renderHLine (col, row)) [0 .. maxCol -1 ] ++ renderDot
+
+    -- render vertical lines and boxes for a specific row
+    renderVertical :: Int -> String
+    renderVertical row =
+      concatMap (\col -> renderVLine (col, row) ++ renderBox (col, row)) [0 .. maxCol -1 ]
+      ++ renderVLine (row, maxCol-1) -- Last vertical line in the row
+
+    -- render a dot
+    renderDot :: String
+    renderDot = "."
+
+    -- render either a horizontal line or space
+    renderHLine :: Point -> String
+    renderHLine p =
+      if (p, Horizontal) `elem` moves
+        then "---"
+        else "   "
+
+
+    -- render either a vertical line or space
+    renderVLine :: Point -> String
+    renderVLine p =
+      if (p, Vertical) `elem` moves
+        then "|"
+        else " "
+
+
+    -- render box with ownership or empty space
+    renderBox :: Point -> String
+    renderBox p =
+      case lookup p boxes of
+        Just PlayerOne -> " P1"
+        Just PlayerTwo -> " P2"
+        Nothing -> "   "
 
 
 -- Story 6 : All functions should consider possible errors or edge cases
