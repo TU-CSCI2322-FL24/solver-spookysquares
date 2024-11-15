@@ -8,7 +8,7 @@ type Board = [Line]
 type Game = (Board, Player, [Box], [Move])
 data Player = PlayerOne | PlayerTwo deriving (Eq, Show)
 type Move = Line
-type Winner = Player
+data Winner = Winner Player | Draw deriving (Show)
 
 --calcBoard to create a board from a given int size (always a perfect square)
 calcBoard :: Int -> Board
@@ -54,7 +54,7 @@ gameWinner game =
         gameOver = null (legalMoves game)
         p1Points = length [box | box <- boxes, snd box == PlayerOne]
         p2Points = length [box | box <- boxes, snd box == PlayerTwo]
-    in if p1Points > p2Points && gameOver then Just PlayerOne else if p2Points > p1Points && gameOver then Just PlayerTwo else Nothing
+    in if p1Points > p2Points && gameOver then Just (Winner PlayerOne) else if p2Points > p1Points && gameOver then Just (Winner PlayerTwo) else if p1Points == p2Points then Just Draw else Nothing
 
 -- Story 3 : Compute the result of making a legal move in a game state, write a function of type
 -- Emma 
