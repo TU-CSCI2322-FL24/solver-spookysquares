@@ -200,18 +200,7 @@ moveEvaluation game@(board,currentPlayer, boxes, moveHistory) move =
       score = length [box | box <- newBoxes, snd box == currentPlayer]
   in  (if newPlayer == currentPlayer && not (null (legalMoves newGame)) then uncurry moveEvaluation (contGame newGame) else (score, newGame))
   --recurse this in case of move keeping player there
+  
+-- helper function to continue a game
 contGame :: Game -> (Game, Move)
 contGame game = (game, head (legalMoves game))
-
---moveOutcome :: Game -> Move -> Winner
---moveOutcome game move =
---  let newGame = makeMove game move
---      newMove:valids = legalMoves newGame
---  in case gameWinner newGame of
---    Just (Winner PlayerOne) -> Winner PlayerOne
---    Just (Winner PlayerTwo) -> Winner PlayerTwo
---    Just Draw -> Draw
---    Nothing -> moveOutcome newGame newMove
-
--- find the result of all possible moves, then compare those to get the one that benefits the current player the most by the end
---of that "turn". get the optimal move then do that again
