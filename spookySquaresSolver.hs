@@ -54,7 +54,7 @@ gameWinner game =
         gameOver = null (legalMoves game)
         p1Points = length [box | box <- boxes, snd box == PlayerOne]
         p2Points = length [box | box <- boxes, snd box == PlayerTwo]
-    in if p1Points > p2Points && gameOver then Just (Winner PlayerOne) else if p2Points > p1Points && gameOver then Just (Winner PlayerTwo) else if p1Points == p2Points then Just Draw else Nothing
+    in if p1Points > p2Points && gameOver then Just (Winner PlayerOne) else if p2Points > p1Points && gameOver then Just (Winner PlayerTwo) else if p1Points == p2Points && gameOver then Just Draw else Nothing
 
 -- Story 3 : Compute the result of making a legal move in a game state, write a function of type
 -- Emma 
@@ -120,7 +120,7 @@ prettyPrint :: Game -> String
 prettyPrint (board, _, boxes, moves) = unlines $ concatMap renderRow [0 .. size]
   where
     -- determine board size dynamically
-    size = 4
+    size = 2
 
 
     -- Render a single row of the game
@@ -172,20 +172,38 @@ prettyPrint (board, _, boxes, moves) = unlines $ concatMap renderRow [0 .. size]
 -- Story 6 : All functions should consider possible errors or edge cases
 
 -- Story 9 : whoWillWin :: Game -> Winner
+--close game considers a very close game on a 2x2 board
 closeGame :: Game
-closeGame = (calcBoard 3, PlayerOne, [((1,1), PlayerTwo)], [((0,0), Vertical), ((2,0), Vertical), ((0,1), Vertical), ((1,1), Vertical), ((2,1), Vertical), ((0,0), Horizontal), ((0,1), Horizontal), ((1,1), Horizontal), ((1,2), Horizontal)])
+closeGame = (calcBoard 2, PlayerOne, [((1,1), PlayerTwo)], [((0,0), Vertical), ((2,0), Vertical), ((0,1), Vertical), ((1,1), Vertical), ((2,1), Vertical), ((0,0), Horizontal), ((0,1), Horizontal), ((1,1), Horizontal), ((1,2), Horizontal)])
 
---whoWillWin function is a function that simulates both players playing optimally(here we cannot), and since this is a perfect information game,
---this means that there will be a winner, or the game will remain a tie. 
+--whoWillWin function is a function that simulates both players playing optimally(here we cannot),
+--score system accounting for boxes
+whoWillWin :: Game -> Winner
+whoWillWin game =
+  let validMoves = legalMoves game
+      validGames = [moveEvaluation game move | move <- validMoves]
+  in undefined
 
 -- this only goes on in the case of the first one, think of something that goes through everything
-whoWillWin :: Game -> Winner
-whoWillWin (board, currentPlayer, boxes, moveHistory) = 
-  let validMoves = legalMoves (board, currentPlayer, boxes, moveHistory) -- gets list of all valid moves for current game
-      currentMove:newValids = validMoves --split validmoves to a head and its tail
-      updatedGame = makeMove (board, currentPlayer, boxes, moveHistory) currentMove -- create the new game
-  in case gameWinner updatedGame of
-        Nothing -> whoWillWin updatedGame
-        Just Draw -> Draw
-        Just (Winner PlayerOne) -> Winner PlayerOne
-        Just (Winner PlayerTwo) -> Winner PlayerTwo
+-- also, there are definitely better moves than others, find a move that gives you the greatest number of boxes.
+moveEvaluation :: Game -> Move -> (Int, Game)
+moveEvaluation game@(board,currentPlayer, boxes, moveHistory) move =
+  let newGame@(_, newPlayer, newBoxes, newMoveHistory) = makeMove game move
+      score = length [box | box <- newBoxes, snd box == currentPlayer]
+  in  (if newPlayer == currentPlayer && not (null (legalMoves newGame)) then uncurry moveEvaluation (contGame newGame) else (score, newGame))
+  --recurse this in case of move keeping player there
+contGame :: Game -> (Game, Move)
+contGame game = (game, head (legalMoves game))
+
+moveOutcome :: Game -> Move -> Winner
+moveOutcome game move =
+  let newGame = makeMove game move
+      newMove:valids = legalMoves newGame
+  in case gameWinner newGame of
+    Just (Winner PlayerOne) -> Winner PlayerOne
+    Just (Winner PlayerTwo) -> Winner PlayerTwo
+    Just Draw -> Draw
+    Nothing -> moveOutcome newGame newMove
+
+-- find the result of all possible moves, then compare those to get the one that benefits the current player the most by the end
+--of that "turn". get the optimal move then do that again
