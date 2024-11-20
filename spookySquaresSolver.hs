@@ -51,8 +51,8 @@ calcBox box =
 gameWinner :: Game -> Maybe Winner
 gameWinner game =
     let boxes = gameBoxes game
-        gameOver = null (legalMoves game)
-        p1Points = length [box | box <- boxes, snd box == PlayerOne]
+        gameOver = null (legalMoves game) -- returns bool
+        p1Points = length [box | box <- boxes, snd box == PlayerOne] --returns number
         p2Points = length [box | box <- boxes, snd box == PlayerTwo]
     in if p1Points > p2Points && gameOver then Just PlayerOne else if p2Points > p1Points && gameOver then Just PlayerTwo else Nothing
 
@@ -170,3 +170,14 @@ prettyPrint (board, _, boxes, moves) = unlines $ concatMap renderRow [0 .. size]
 
 
 -- Story 6 : All functions should consider possible errors or edge cases
+
+-- Story 11 : Design simple text format that is easy for your program to read and write. It should probably be different  your "pretty show" from the first sprint.
+--The input format should describe the board game in progress, and can look very similar to your internal representation. 
+--For instance, each square is a 0 for blank, 1 for player 1, or 2 for player 2. The current turn or other intangible components are given in the first (or last) few lines.
+--I suggest you use newlines, spaces, or other delimiters that afford the use of lines, words, and splitOn.
+
+
+--allLines 0,0,H              how we represent a line, all lines is based on how big the board is
+--player1 = B player2 = W     the second line will only prnt the letter to represent the current turn
+--boxesWon 0,1,W 1,1,B 2,3,W  all the boxes that have been completed and who completed them seperated by a space so we can tell the program to split on spaces
+--moveHistory 0,0,H 0,0,V     a list of move history
