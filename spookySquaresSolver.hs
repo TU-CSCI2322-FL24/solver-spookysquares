@@ -1,3 +1,5 @@
+import Data.List (isPrefixOf)
+
 type Point = (Int, Int)
 type Line = (Point, Direction)
 data Direction = Vertical | Horizontal deriving (Eq, Show)
@@ -181,3 +183,104 @@ prettyPrint (board, _, boxes, moves) = unlines $ concatMap renderRow [0 .. size]
 --player1 = B player2 = W     the second line will only prnt the letter to represent the current turn
 --boxesWon 0,1,W 1,1,B 2,3,W  all the boxes that have been completed and who completed them seperated by a space so we can tell the program to split on spaces
 --moveHistory 0,0,H 0,0,V     a list of move history
+
+-- Story 12
+readGame :: String -> Game
+readGame input = 
+  let 
+    linesInput = lines input -- splits into lines
+    -- parse all lines
+    allLinesStr = parseKeyValue "allLines " linesInput
+    allLines = map parseLine (words allLinesStr)
+    -- parse current player
+    currPlayerLine = head $ filter ("player1" `isPrefixOf`) linesInput
+    currPlayer = if last currPlayerLine == 'B' then PlayerOne else PlayerTwo
+    -- parse boxes W\won
+    boxesWonStr = parseKeyValue "boxesWon " linesInput
+    boxesWon = map parseBox (words boxesWonStr)
+    -- parse move hist
+    moveHistStr = parseKeyValue "moveHistory " linesInput
+    moveHist = map parseLine (words moveHistStr)
+
+  in (allLines, currPlayer, boxesWon, moveHist)
+
+-- helper to get key-val data from lines
+parseKeyValue :: String -> [String] -> String
+parseKeyValue key linesInput = 
+  case filter (key `isPrefixOf`) linesInput of
+    [line] -> drop (length key) line
+    _ -> error $ "Missing or invalid key: " ++ key
+
+-- parse line in format x,y,H / x,y,V
+parseLine :: String -> Line 
+parseLine str = 
+  let (pointStr, dirStr) = splitAt (length str -2) str
+      point = parsePoint pointStr
+      dir = case dirStr of 
+        ",H" -> Horizontal
+        ",V" -> Vertical
+        _ -> error $ "Invlaid direction: " ++ dirStr
+  in (point, dir)
+
+-- parse a point in format x,y
+parsePoint :: String -> Point
+parsePoint str = 
+  let [x,y] = map read (splitOn ',' str)
+  in (x,y)
+
+-- parse a box in format x,y,W / x,y,B
+parseBox :: String -> Box
+parseBox str = 
+  let (pointStr, playerChar) = splitAt (length str -2) str
+      point = parsePoint pointStr
+      player = case playerChar of
+        ",B" -> PlayerOne
+        ",W" -> PlayerTwo
+        _ -> error $ "Invalid player: " ++ playerChar
+  in (point, player)
+
+-- helper to split str by char
+splitOn :: Char -> String -> [String]
+splitOn delim str = case break (== delim) str of
+  (a, _:b) -> a : splitOn delim b
+  (a, "") -> [a]
+
+
+-- Story 13
+showGame :: Game -> String
+showGame (board, player, boxes, moves) =
+  unlines [showAllLines board, showCurrPlayer player, showBoxesWon boxes, showMoveHist moves]
+
+-- board lines to allLines format
+showAllLines :: Board -> String
+showAllLines board =
+  "allLines " ++ unwords (map showLine board)
+
+-- converts line to x,y,H / x,y,V
+showLine :: Line -> String
+showLine ((x,y) , dir) =
+  show x ++ "," ++ show y ++ "," ++ case dir of
+    Horizontal -> "H"
+    Vertical -> "V"
+
+-- current player to player1 = B player2 = W format
+showCurrPlayer :: Player -> String
+showCurrPlayer PlayerOne = "player1 = B player2 = W"
+showCurrPlayer PlayerTwo = "player1 = B player2 = W"
+
+-- boxes to boxesWon format
+showBoxesWon :: [Box] -> String
+showBoxesWon boxes = 
+  "boxesWon " ++ unwords (map showBox boxes)
+
+-- converts box to x,y,W / x,y,B
+showBox :: Box -> String
+showBox ((x,y), player) = 
+  show x ++ "," ++ show y ++ "," ++ case player of
+    PlayerOne -> "B"
+    PlayerTwo -> "W"
+
+-- converts move hist to moveHist format
+showMoveHist :: [Move] -> String
+showMoveHist moves = 
+  "moveHistory " ++ unwords (map showLine moves)
