@@ -78,7 +78,7 @@ makeMove game move =
             in  all (`elem` newMoves) [top, bottom, left, right]
 
         -- collects the completed boxes after the move
-        completedBoxes = [(point, player) | point <- [(x, y) | x <- [0..3], y <- [0..3]],
+        completedBoxes = [(point, player) | point <- [(x, y) | x <- [0..3], y <- [0.. 3]],
                            isBoxCompleted point,
                            point `notElem` map fst boxes]
 
@@ -170,3 +170,22 @@ prettyPrint (board, _, boxes, moves) = unlines $ concatMap renderRow [0 .. size]
 
 
 -- Story 6 : All functions should consider possible errors or edge cases
+
+-- Story 9 : whoWillWin :: Game -> Winner
+closeGame :: Game
+closeGame = (calcBoard 3, PlayerOne, [((1,1), PlayerTwo)], [((0,0), Vertical), ((2,0), Vertical), ((0,1), Vertical), ((1,1), Vertical), ((2,1), Vertical), ((0,0), Horizontal), ((0,1), Horizontal), ((1,1), Horizontal), ((1,2), Horizontal)])
+
+--whoWillWin function is a function that simulates both players playing optimally(here we cannot), and since this is a perfect information game,
+--this means that there will be a winner, or the game will remain a tie. 
+
+-- this only goes on in the case of the first one, think of something that goes through everything
+whoWillWin :: Game -> Winner
+whoWillWin (board, currentPlayer, boxes, moveHistory) = 
+  let validMoves = legalMoves (board, currentPlayer, boxes, moveHistory) -- gets list of all valid moves for current game
+      currentMove:newValids = validMoves --split validmoves to a head and its tail
+      updatedGame = makeMove (board, currentPlayer, boxes, moveHistory) currentMove -- create the new game
+  in case gameWinner updatedGame of
+        Nothing -> whoWillWin updatedGame
+        Just Draw -> Draw
+        Just (Winner PlayerOne) -> Winner PlayerOne
+        Just (Winner PlayerTwo) -> Winner PlayerTwo
