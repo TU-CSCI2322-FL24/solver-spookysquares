@@ -123,7 +123,7 @@ prettyPrint :: Game -> String
 prettyPrint (board, _, boxes, moves) = unlines $ concatMap renderRow [0 .. size]
   where
     -- determine board size dynamically
-    size = 2
+    size = 4
 
 
     -- Render a single row of the game
