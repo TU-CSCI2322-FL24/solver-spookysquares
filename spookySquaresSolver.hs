@@ -1,3 +1,6 @@
+import Data.List
+import Data.Ord (comparing)
+
 type Point = (Int, Int)
 type Line = (Point, Direction)
 data Direction = Vertical | Horizontal deriving (Eq, Show)
@@ -181,29 +184,34 @@ closeGame = (calcBoard 2, PlayerOne, [((1,1), PlayerTwo)], [((0,0), Vertical), (
 whoWillWin :: Game -> Winner
 whoWillWin game =
   let validMoves = legalMoves game
-      validGames = [moveEvaluation game move | move <- validMoves]
-  in undefined
+      moveEvaluations = [moveEvaluation game move | move <- validMoves]
+      optimalResult = snd (maximumBy (comparing fst) moveEvaluations)
+  in case gameWinner optimalResult of
+    Just (Winner PlayerOne) -> Winner PlayerOne
+    Just (Winner PlayerTwo) -> Winner PlayerTwo
+    Just Draw -> Draw
+    Nothing -> whoWillWin optimalResult
 
 -- this only goes on in the case of the first one, think of something that goes through everything
 -- also, there are definitely better moves than others, find a move that gives you the greatest number of boxes.
 moveEvaluation :: Game -> Move -> (Int, Game)
 moveEvaluation game@(board,currentPlayer, boxes, moveHistory) move =
-  let newGame@(_, newPlayer, newBoxes, newMoveHistory) = makeMove game move
+  let newGame@(newBoard, newPlayer, newBoxes, newMoveHistory) = makeMove game move
       score = length [box | box <- newBoxes, snd box == currentPlayer]
   in  (if newPlayer == currentPlayer && not (null (legalMoves newGame)) then uncurry moveEvaluation (contGame newGame) else (score, newGame))
   --recurse this in case of move keeping player there
 contGame :: Game -> (Game, Move)
 contGame game = (game, head (legalMoves game))
 
-moveOutcome :: Game -> Move -> Winner
-moveOutcome game move =
-  let newGame = makeMove game move
-      newMove:valids = legalMoves newGame
-  in case gameWinner newGame of
-    Just (Winner PlayerOne) -> Winner PlayerOne
-    Just (Winner PlayerTwo) -> Winner PlayerTwo
-    Just Draw -> Draw
-    Nothing -> moveOutcome newGame newMove
+--moveOutcome :: Game -> Move -> Winner
+--moveOutcome game move =
+--  let newGame = makeMove game move
+--      newMove:valids = legalMoves newGame
+--  in case gameWinner newGame of
+--    Just (Winner PlayerOne) -> Winner PlayerOne
+--    Just (Winner PlayerTwo) -> Winner PlayerTwo
+--    Just Draw -> Draw
+--    Nothing -> moveOutcome newGame newMove
 
 -- find the result of all possible moves, then compare those to get the one that benefits the current player the most by the end
 --of that "turn". get the optimal move then do that again
