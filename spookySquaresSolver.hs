@@ -1,4 +1,5 @@
 import Data.List (isPrefixOf)
+import Text.XHtml (input)
 
 type Point = (Int, Int)
 type Line = (Point, Direction)
@@ -186,64 +187,54 @@ prettyPrint (board, _, boxes, moves) = unlines $ concatMap renderRow [0 .. size]
 
 -- Story 12
 readGame :: String -> Game
-readGame input = 
-  let 
-    linesInput = lines input -- splits into lines
-    -- parse all lines
-    allLinesStr = parseKeyValue "allLines " linesInput
-    allLines = map parseLine (words allLinesStr)
-    -- parse current player
-    currPlayerLine = head $ filter ("player1" `isPrefixOf`) linesInput
-    currPlayer = if last currPlayerLine == 'B' then PlayerOne else PlayerTwo
-    -- parse boxes W\won
-    boxesWonStr = parseKeyValue "boxesWon " linesInput
-    boxesWon = map parseBox (words boxesWonStr)
-    -- parse move hist
-    moveHistStr = parseKeyValue "moveHistory " linesInput
-    moveHist = map parseLine (words moveHistStr)
+readGame str = 
+  let input = lines str
+      boardLines = parseLines (head input)
+      activePlayer = parsePlayer (input !! 1)
+      boxesWon = parseBoxes (input !! 2)
+      moveHistory = parseMoves (input !! 3)
+  in (boardLines, activePlayer, boxesWon, moveHistory)
 
-  in (allLines, currPlayer, boxesWon, moveHist)
+parseLines :: String -> Board
+parseLines str = 
+  let lineStrs = words str
+  in [parseLine line | line <- lineStrs]
 
--- helper to get key-val data from lines
-parseKeyValue :: String -> [String] -> String
-parseKeyValue key linesInput = 
-  case filter (key `isPrefixOf`) linesInput of
-    [line] -> drop (length key) line
-    _ -> error $ "Missing or invalid key: " ++ key
-
--- parse line in format x,y,H / x,y,V
-parseLine :: String -> Line 
+parseLine :: String -> Line
 parseLine str = 
-  let (pointStr, dirStr) = splitAt (length str -2) str
-      point = parsePoint pointStr
-      dir = case dirStr of 
-        ",H" -> Horizontal
-        ",V" -> Vertical
-        _ -> error $ "Invlaid direction: " ++ dirStr
-  in (point, dir)
+  let (x:y:d:_) = splitOn ',' str
+  in ((read x, read y), parseDirection d)
 
--- parse a point in format x,y
-parsePoint :: String -> Point
-parsePoint str = 
-  let [x,y] = map read (splitOn ',' str)
-  in (x,y)
+parseDirection :: String -> Direction
+parseDirection "H" = Horizontal
+parseDirection "V" = Vertical
+parseDirection _ = error "Invalid direction"
 
--- parse a box in format x,y,W / x,y,B
-parseBox :: String -> Box
-parseBox str = 
-  let (pointStr, playerChar) = splitAt (length str -2) str
-      point = parsePoint pointStr
-      player = case playerChar of
-        ",B" -> PlayerOne
-        ",W" -> PlayerTwo
-        _ -> error $ "Invalid player: " ++ playerChar
-  in (point, player)
-
--- helper to split str by char
 splitOn :: Char -> String -> [String]
 splitOn delim str = case break (== delim) str of
   (a, _:b) -> a : splitOn delim b
   (a, "") -> [a]
+
+parsePlayer :: String -> Player
+parsePlayer "W" = PlayerTwo
+parsePlayer "B" = PlayerOne
+parsePlayer _ = error "Invalid playyer"
+
+parseBoxes :: String -> [Box]
+parseBoxes str = 
+  let boxStrs = words str
+  in [parseBox box | box <- boxStrs]
+
+parseBox :: String -> Box
+parseBox str = 
+  let (x:y:p:_) = splitOn ',' str
+      player = parsePlayer p
+  in ((read x, read y), player)
+
+parseMoves :: String -> [Move]
+parseMoves str = 
+  let moveStrs = words str
+  in [parseLine move | move <- moveStrs]
 
 
 -- Story 13
