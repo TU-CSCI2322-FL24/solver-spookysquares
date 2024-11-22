@@ -275,3 +275,48 @@ showBox ((x,y), player) =
 showMoveHist :: [Move] -> String
 showMoveHist moves = 
   "moveHistory " ++ unwords (map showLine moves)
+
+
+  -- Story 14 
+
+-- write  game state to a file
+
+writeGame :: Game -> FilePath -> IO ()
+writeGame game filePath = do
+  let gameString = showGame game
+  writeFile filePath gameString
+  putStrLn $ "Game state written to " ++ filePath
+
+
+-- load game state 
+loadGame :: FilePath -> IO Game
+loadGame filePath = do
+  content <- readFile filePath
+  let game = readGame content
+  putStrLn "Game state loaded successfully!"
+  return game
+
+
+-- calculate and print best move fr player 
+putBestMove :: Game -> IO ()
+putBestMove game = do
+  let move = bestMove game -- bestMove placeholder (not implemented yet)
+  putStrLn $ "Best Move: " ++ show move
+  printOutcome game move
+
+-- helper to print outcome of a move
+printOutcome :: Game -> Move -> IO ()
+printOutcome game move =
+  let result = gameWinner (makeMove game move)
+  in case result of
+       Just PlayerOne -> putStrLn "This move forces a win for PlayerOne"
+       Just PlayerTwo -> putStrLn "This move forces a win for PlayerTwo"
+       Nothing -> putStrLn "This move forces a tie"
+
+-- main IO: reads a file, loads game and prints the best move
+main :: IO ()
+main = do
+  putStrLn "Enter the file path for the game state:"
+  filePath <- getLine
+  game <- loadGame filePath
+  putBestMove game
