@@ -209,6 +209,40 @@ moveEvaluation game@(board,currentPlayer, boxes, moveHistory) move =
 contGame :: Game -> (Game, Move)
 contGame game = (game, head (legalMoves game))
 
+
+
+
+-- Story 10: BestMove 
+
+-- helper to check if a move results in a win
+isWinningMove :: Game -> Move -> Bool
+isWinningMove game move =
+  let newGame = makeMove game move
+  in case gameWinner newGame of
+       Just winner -> winner == gamePlayer game -- Current player wins
+       Nothing -> False
+
+-- helper function to check if a move leads to a tie
+isForcingTie :: Game -> Move -> Bool
+isForcingTie game move =
+  let newGame = makeMove game move
+      remainingMoves = legalMoves newGame
+  in null remainingMoves && gameWinner newGame == Nothing -- No moves left and no winner
+
+--  bestMove 
+bestMove :: Game -> Move
+bestMove game =
+  let moves = legalMoves game
+      winningMoves = [move | move <- moves, isWinningMove game move]
+      tieMoves = [move | move <- moves, isForcingTie game move]
+  in case winningMoves of
+       (wm:_) -> wm  -- return the first winning move
+       [] -> case tieMoves of
+               (tm:_) -> tm  -- Return the first move that forces a tie
+               [] -> head moves -- Fallback to any legal move (shouldn't happen if moves exist)
+
+
+
 -- Story 11 : Design simple text format that is easy for your program to read and write. It should probably be different  your "pretty show" from the first sprint.
 --The input format should describe the board game in progress, and can look very similar to your internal representation. 
 --For instance, each square is a 0 for blank, 1 for player 1, or 2 for player 2. The current turn or other intangible components are given in the first (or last) few lines.
