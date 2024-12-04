@@ -9,12 +9,13 @@ type Line = (Point, Direction)
 data Direction = Vertical | Horizontal deriving (Eq, Show)
 type Box = (Point, Player)
 type Board = [Line]
+type Rating = Int
 
 -- Game type is a 4-tuple containing the complete board, the active player, the completed boxes, and the history of moves
 type Game = (Board, Player, [Box], [Move])
 data Player = PlayerOne | PlayerTwo deriving (Eq, Show)
 type Move = Line
-data Winner = Winner Player | Draw deriving (Show)
+data Winner = Winner Player | Draw deriving (Eq, Show)
 
 --calcBoard to create a board from a given int size (always a perfect square)
 calcBoard :: Int -> Board
@@ -219,7 +220,7 @@ isWinningMove :: Game -> Move -> Bool
 isWinningMove game move =
   let newGame = makeMove game move
   in case gameWinner newGame of
-       Just winner -> winner == gamePlayer game -- Current player wins
+       Just (Winner player) -> player == gamePlayer game
        Nothing -> False
 
 -- helper function to check if a move leads to a tie
@@ -227,7 +228,7 @@ isForcingTie :: Game -> Move -> Bool
 isForcingTie game move =
   let newGame = makeMove game move
       remainingMoves = legalMoves newGame
-  in null remainingMoves && gameWinner newGame == Nothing -- No moves left and no winner
+  in null remainingMoves && gameWinner newGame == Just Draw -- No moves left and no winner
 
 --  bestMove 
 bestMove :: Game -> Move
@@ -378,8 +379,8 @@ printOutcome :: Game -> Move -> IO ()
 printOutcome game move =
   let result = gameWinner (makeMove game move)
   in case result of
-       Just PlayerOne -> putStrLn "This move forces a win for PlayerOne"
-       Just PlayerTwo -> putStrLn "This move forces a win for PlayerTwo"
+       Just (Winner PlayerOne) -> putStrLn "This move forces a win for PlayerOne"
+       Just (Winner PlayerTwo) -> putStrLn "This move forces a win for PlayerTwo"
        Nothing -> putStrLn "This move forces a tie"
 
 -- main IO: reads a file, loads game and prints the best move
@@ -389,3 +390,11 @@ main = do
   filePath <- getLine
   game <- loadGame filePath
   putBestMove game
+
+--story 17: Rate game function
+rateGame :: Game -> Rating
+rateGame game@(board, currentPlayer, boxes, moveHistory) =
+  let currentPlayerScore = if gamePlayer game == PlayerOne then 1 else -1
+      boxScore =(length [box | box <- boxes, snd box == PlayerOne]) - (length [box | box <- boxes, snd box == PlayerTwo])
+      score = currentPlayerScore + boxScore
+  in score
