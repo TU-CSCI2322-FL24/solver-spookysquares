@@ -1,17 +1,21 @@
+import Data.List
+import Data.Ord (comparing)
 import Data.List (isPrefixOf)
 import Text.XHtml (input)
+
 
 type Point = (Int, Int)
 type Line = (Point, Direction)
 data Direction = Vertical | Horizontal deriving (Eq, Show)
 type Box = (Point, Player)
 type Board = [Line]
+type Rating = Int
 
 -- Game type is a 4-tuple containing the complete board, the active player, the completed boxes, and the history of moves
 type Game = (Board, Player, [Box], [Move])
 data Player = PlayerOne | PlayerTwo deriving (Eq, Show)
 type Move = Line
-type Winner = Player
+data Winner = Winner Player | Draw deriving (Eq, Show)
 
 --calcBoard to create a board from a given int size (always a perfect square)
 calcBoard :: Int -> Board
@@ -57,7 +61,7 @@ gameWinner game =
         gameOver = null (legalMoves game) -- returns bool
         p1Points = length [box | box <- boxes, snd box == PlayerOne] --returns number
         p2Points = length [box | box <- boxes, snd box == PlayerTwo]
-    in if p1Points > p2Points && gameOver then Just PlayerOne else if p2Points > p1Points && gameOver then Just PlayerTwo else Nothing
+    in if p1Points > p2Points && gameOver then Just (Winner PlayerOne) else if p2Points > p1Points && gameOver then Just (Winner PlayerTwo) else if p1Points == p2Points && gameOver then Just Draw else Nothing
 
 -- Story 3 : Compute the result of making a legal move in a game state, write a function of type
 -- Emma 
@@ -81,7 +85,7 @@ makeMove game move =
             in  all (`elem` newMoves) [top, bottom, left, right]
 
         -- collects the completed boxes after the move
-        completedBoxes = [(point, player) | point <- [(x, y) | x <- [0..3], y <- [0..3]],
+        completedBoxes = [(point, player) | point <- [(x, y) | x <- [0..3], y <- [0.. 3]],
                            isBoxCompleted point,
                            point `notElem` map fst boxes]
 
@@ -173,6 +177,72 @@ prettyPrint (board, _, boxes, moves) = unlines $ concatMap renderRow [0 .. size]
 
 
 -- Story 6 : All functions should consider possible errors or edge cases
+
+
+-- Story 9 : whoWillWin :: Game -> Winner
+--close game considers a very close game on a 2x2 board
+closeGame :: Game
+closeGame = (calcBoard 2, PlayerOne, [((1,1), PlayerTwo)], [((0,0), Vertical), ((2,0), Vertical), ((0,1), Vertical), ((1,1), Vertical), ((2,1), Vertical), ((0,0), Horizontal), ((0,1), Horizontal), ((1,1), Horizontal), ((1,2), Horizontal)])
+
+--whoWillWin function is a function that simulates both players playing optimally(here we cannot),
+--score system accounting for boxes
+whoWillWin :: Game -> Winner
+whoWillWin game =
+  let validMoves = legalMoves game
+      moveEvaluations = [moveEvaluation game move | move <- validMoves]
+      optimalResult = snd (maximumBy (comparing fst) moveEvaluations)
+  in case gameWinner optimalResult of
+    Just (Winner PlayerOne) -> Winner PlayerOne
+    Just (Winner PlayerTwo) -> Winner PlayerTwo
+    Just Draw -> Draw
+    Nothing -> whoWillWin optimalResult
+
+-- this only goes on in the case of the first one, think of something that goes through everything
+-- also, there are definitely better moves than others, find a move that gives you the greatest number of boxes.
+moveEvaluation :: Game -> Move -> (Int, Game)
+moveEvaluation game@(board,currentPlayer, boxes, moveHistory) move =
+  let newGame@(newBoard, newPlayer, newBoxes, newMoveHistory) = makeMove game move
+      score = length [box | box <- newBoxes, snd box == currentPlayer]
+  in  (if newPlayer == currentPlayer && not (null (legalMoves newGame)) then uncurry moveEvaluation (contGame newGame) else (score, newGame))
+  --recurse this in case of move keeping player there
+  
+-- helper function to continue a game
+contGame :: Game -> (Game, Move)
+contGame game = (game, head (legalMoves game))
+
+
+
+
+-- Story 10: BestMove 
+
+-- helper to check if a move results in a win
+isWinningMove :: Game -> Move -> Bool
+isWinningMove game move =
+  let newGame = makeMove game move
+  in case gameWinner newGame of
+       Just (Winner player) -> player == gamePlayer game
+       Nothing -> False
+
+-- helper function to check if a move leads to a tie
+isForcingTie :: Game -> Move -> Bool
+isForcingTie game move =
+  let newGame = makeMove game move
+      remainingMoves = legalMoves newGame
+  in null remainingMoves && gameWinner newGame == Just Draw -- No moves left and no winner
+
+--  bestMove 
+bestMove :: Game -> Move
+bestMove game =
+  let moves = legalMoves game
+      winningMoves = [move | move <- moves, isWinningMove game move]
+      tieMoves = [move | move <- moves, isForcingTie game move]
+  in case winningMoves of
+       (wm:_) -> wm  -- return the first winning move
+       [] -> case tieMoves of
+               (tm:_) -> tm  -- Return the first move that forces a tie
+               [] -> head moves -- Fallback to any legal move (shouldn't happen if moves exist)
+
+
 
 -- Story 11 : Design simple text format that is easy for your program to read and write. It should probably be different  your "pretty show" from the first sprint.
 --The input format should describe the board game in progress, and can look very similar to your internal representation. 
@@ -309,8 +379,8 @@ printOutcome :: Game -> Move -> IO ()
 printOutcome game move =
   let result = gameWinner (makeMove game move)
   in case result of
-       Just PlayerOne -> putStrLn "This move forces a win for PlayerOne"
-       Just PlayerTwo -> putStrLn "This move forces a win for PlayerTwo"
+       Just (Winner PlayerOne) -> putStrLn "This move forces a win for PlayerOne"
+       Just (Winner PlayerTwo) -> putStrLn "This move forces a win for PlayerTwo"
        Nothing -> putStrLn "This move forces a tie"
 
 -- main IO: reads a file, loads game and prints the best move
@@ -320,3 +390,11 @@ main = do
   filePath <- getLine
   game <- loadGame filePath
   putBestMove game
+
+--story 17: Rate game function
+rateGame :: Game -> Rating
+rateGame game@(board, currentPlayer, boxes, moveHistory) =
+  let currentPlayerScore = if gamePlayer game == PlayerOne then 1 else -1
+      boxScore =(length [box | box <- boxes, snd box == PlayerOne]) - (length [box | box <- boxes, snd box == PlayerTwo])
+      score = currentPlayerScore + boxScore
+  in score
