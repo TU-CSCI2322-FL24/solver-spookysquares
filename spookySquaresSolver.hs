@@ -2,6 +2,8 @@ import Data.List
 import Data.Ord (comparing)
 import Data.List (isPrefixOf)
 import Text.XHtml (input)
+import Distribution.Simple.LocalBuildInfo (depLibraryPaths)
+import Data.Aeson.Encoding (bool)
 
 
 type Point = (Int, Int)
@@ -398,3 +400,34 @@ rateGame game@(board, currentPlayer, boxes, moveHistory) =
       boxScore =(length [box | box <- boxes, snd box == PlayerOne]) - (length [box | box <- boxes, snd box == PlayerTwo])
       score = currentPlayerScore + boxScore
   in score
+
+-- story 18 (and 19)
+-- looks at game state and retrns best rating and corresponding move
+whoMightWin :: Game -> Int -> (Rating, Maybe Move)
+whoMightWin game 0 = (rateGame game, Nothing) --base case
+whoMightWin game depth
+  | null validMoves = (rateGame game, Nothing) --no legal moves
+  | otherwise = search validMoves Nothing (if player == PlayerOne then (minBound) else maxBound)
+  where
+    player = gamePlayer game
+    validMoves = legalMoves game
+
+    search :: [Move] -> Maybe Move -> Rating -> (Rating, Maybe Move)
+    search [] bestMove bestRating = (bestRating, bestMove)
+    search (move:moves) currentBest currentBestRating =
+      let (newRating, _) = whoMightWin (makeMove game move) (depth -1)
+          better = if player == PlayerOne
+                   then newRating > currentBestRating
+                   else newRating < currentBestRating
+          newBest = if better then Just move else currentBest
+          updatedBestRating = if better then newRating else currentBestRating
+      in if isWinningOutcome newRating player
+         then (newRating, Just move)
+         else search moves newBest updatedBestRating
+    
+    -- helper to check if a rating is a winning outcome
+      isWinningOutcome :: Rating -> Player -> Bool
+      isWinningOutcome rating PlayerOne = (rating == maxBound)
+      isWinningOutcome rating PlayerTwo = (rating == minBound)
+
+
