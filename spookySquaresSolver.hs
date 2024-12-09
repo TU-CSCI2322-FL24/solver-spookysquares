@@ -426,8 +426,8 @@ whoMightWin game depth
          else search moves newBest updatedBestRating
     
     -- helper to check if a rating is a winning outcome
-      isWinningOutcome :: Rating -> Player -> Bool
-      isWinningOutcome rating PlayerOne = (rating == maxBound)
-      isWinningOutcome rating PlayerTwo = (rating == minBound)
+    isWinningOutcome :: Rating -> Player -> Bool
+    isWinningOutcome rating PlayerOne = rating == maxBound
+    isWinningOutcome rating PlayerTwo = rating == minBound
 
 
