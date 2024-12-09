@@ -2,6 +2,8 @@ import Data.List
 import Data.Ord (comparing)
 import Data.List (isPrefixOf)
 import Text.XHtml (input)
+import System.Console.GetOpt
+import Distribution.Simple.Setup (RegisterFlags(regArgs))
 
 
 type Point = (Int, Int)
@@ -16,6 +18,7 @@ type Game = (Board, Player, [Box], [Move])
 data Player = PlayerOne | PlayerTwo deriving (Eq, Show)
 type Move = Line
 data Winner = Winner Player | Draw deriving (Eq, Show)
+data Flag = Help | Depth Int deriving (Show)
 
 --calcBoard to create a board from a given int size (always a perfect square)
 calcBoard :: Int -> Board
@@ -398,3 +401,18 @@ rateGame game@(board, currentPlayer, boxes, moveHistory) =
       boxScore =(length [box | box <- boxes, snd box == PlayerOne]) - (length [box | box <- boxes, snd box == PlayerTwo])
       score = currentPlayerScore + boxScore
   in score
+
+
+--story 23/24:
+
+options :: [OptDescr Flag]
+options = 
+        [Option ['d'] ["depth"] (ReqArg (Depth . read) "NUM") "Set the depth cutoff to NUM"
+        ,Option ['h'] ["help"] (NoArg Help) "Show help message"]
+
+-- parseArgs :: [String] -> IO ([Flag], [String])
+-- parseArgs args = case getOpt Permute options args of
+--   (opts, nonOpts, []) -> return (opts, nonOpts)
+--   (_, _, errs) -> ioError (userError (concat errs ++ usageInfo header options))
+--   where
+--     header = "spookySuqares [OPTIONS]"
