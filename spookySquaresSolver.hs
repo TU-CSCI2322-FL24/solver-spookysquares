@@ -398,3 +398,48 @@ rateGame game@(board, currentPlayer, boxes, moveHistory) =
       boxScore =(length [box | box <- boxes, snd box == PlayerOne]) - (length [box | box <- boxes, snd box == PlayerTwo])
       score = currentPlayerScore + boxScore
   in score
+
+  -- Second, you will have to implement a command-line interface, supporting the following flags. For full credit
+-- you should use the GetOpt library. Be sure to test your interface on the inputs from Story 20 above.
+
+-- story 21: Your program should take one argument: the name of a file describing the board in progress. 
+-- Output a good move, using a reasonable cutoff depth (likely between 3 and 8), and output just the move.
+data Flag = Help | File String | Depth (Maybe Int) | Winner deriving (Show, Eq)
+
+options :: [OptDescr Flag]
+options = [ Option ['h'] ["help"] (NoArg Help) "Print usage information and exit."
+    	    , Option ['f'] ["file"] (ReqArg File "<file>") "The board file to load and analyze."
+          , Option ['d'] ["depth"] (ReqArg (Depth . read) "<depth>") "Cutoff depth for the move calculation."
+          , Option ['w'] ["winner"] (NoArg Winner) "Find the best move using exhaustive search."
+          ]
+
+--Output a good move from story 18 using a reasonable cutoff depth (likely between 3 and 8), and output just the move.
+main :: IO()
+main = do
+  args <- getArgs
+  let (flags, inputs, errors) = getOpt Permute options args 
+  if (Help `elem` flags) || (not $ null errors)
+  then putStrLn $ usageInfo "Spooky Squares [options] [filename] \n dots and boxes" options
+  else case lookupFileFlag flags of
+      --Nothing -> putStrLn "Error: No board file specified. Use -f or --file."
+      --Just file -> do
+        --game <- loadGame file
+        --let depth = getDepthFlag flags 5 -- Default depth is 5
+        --dispatch flags game depth
+
+lookupFileFlag :: [Flag] -> Maybe String
+lookupFileFlag flags = case [f | File f <- flags] of 
+  (f:_) -> Just f
+  []    -> Nothing
+
+--getDepthFlag :: [Flag] -> Int -> Int
+--getDepthFlag flags defaultDepth = case [d | Depth (Just d) <- flags] of
+  --(d:_) -> d
+  --[]    -> defaultDepth
+
+-- story 22:  Support the  -w, --winner flag. When passed, the program should print out the best move, using the exhaustive search 
+-- from the Story 9 who will win /Story 10 in the second sprint with no cut-off depth.
+dispatch :: [Flag] -> Game -> Int -> IO ()
+dispatch flags game depth
+  | Winner `elem` flags = printBestMove game Nothing
+  | otherwise = printBestMove game (Just depth)
