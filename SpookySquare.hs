@@ -1,9 +1,10 @@
+module SpookySquare where
 import Data.List
 import Data.Ord (comparing)
 import Data.List (isPrefixOf)
 import Text.XHtml (input)
-import System.Console.GetOpt
-import Distribution.Simple.Setup (RegisterFlags(regArgs))
+
+
 
 
 type Point = (Int, Int)
@@ -18,8 +19,6 @@ type Game = (Board, Player, [Box], [Move])
 data Player = PlayerOne | PlayerTwo deriving (Eq, Show)
 type Move = Line
 data Winner = Winner Player | Draw deriving (Eq, Show)
-data Flag = Help | Depth Int deriving (Show)
-
 --calcBoard to create a board from a given int size (always a perfect square)
 calcBoard :: Int -> Board
 calcBoard size = ([((x,y), Horizontal) | x <- [0..size - 1], y <- [0..size]] ++ [((x,y), Vertical) | x <- [0..size], y <- [0..size - 1]])
@@ -352,47 +351,11 @@ showMoveHist moves =
 
   -- Story 14 
 
--- write  game state to a file
-
-writeGame :: Game -> FilePath -> IO ()
-writeGame game filePath = do
-  let gameString = showGame game
-  writeFile filePath gameString
-  putStrLn $ "Game state written to " ++ filePath
 
 
--- load game state 
-loadGame :: FilePath -> IO Game
-loadGame filePath = do
-  content <- readFile filePath
-  let game = readGame content
-  putStrLn "Game state loaded successfully!"
-  return game
-
-
--- calculate and print best move fr player 
-putBestMove :: Game -> IO ()
-putBestMove game = do
-  let move = bestMove game -- bestMove placeholder (not implemented yet)
-  putStrLn $ "Best Move: " ++ show move
-  printOutcome game move
-
--- helper to print outcome of a move
-printOutcome :: Game -> Move -> IO ()
-printOutcome game move =
-  let result = gameWinner (makeMove game move)
-  in case result of
-       Just (Winner PlayerOne) -> putStrLn "This move forces a win for PlayerOne"
-       Just (Winner PlayerTwo) -> putStrLn "This move forces a win for PlayerTwo"
-       Nothing -> putStrLn "This move forces a tie"
 
 -- main IO: reads a file, loads game and prints the best move
-main :: IO ()
-main = do
-  putStrLn "Enter the file path for the game state:"
-  filePath <- getLine
-  game <- loadGame filePath
-  putBestMove game
+
 
 --story 17: Rate game function
 rateGame :: Game -> Rating
@@ -404,11 +367,6 @@ rateGame game@(board, currentPlayer, boxes, moveHistory) =
 
 
 --story 23/24:
-
-options :: [OptDescr Flag]
-options = 
-        [Option ['d'] ["depth"] (ReqArg (Depth . read) "NUM") "Set the depth cutoff to NUM"
-        ,Option ['h'] ["help"] (NoArg Help) "Show help message"]
 
 -- parseArgs :: [String] -> IO ([Flag], [String])
 -- parseArgs args = case getOpt Permute options args of
