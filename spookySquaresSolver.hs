@@ -431,3 +431,58 @@ whoMightWin game depth
     isWinningOutcome rating PlayerTwo = rating == minBound
 
 
+
+-- Story 25 
+main :: IO ()
+main = do
+  args <- getArgs
+  if null args
+    then putStrLn "Usage: ./solver-spookysquares -m <move> [--verbose]"
+    else handleFlags args
+
+
+
+handleFlags :: [String] -> IO ()
+handleFlags args = do
+  let moveFlag = getFlagValue "-m" args
+  let verbose = "-v" `elem` args || "--verbose" `elem` args
+  case moveFlag of
+    Nothing -> putStrLn "Error: Missing move flag (-m <move>)"
+    Just moveStr -> do
+      case parseMove moveStr of
+        Nothing -> putStrLn "Error: Invalid move format. Expected format: x,y,H or x,y,V"
+        Just move -> do
+          -- Load game state (dummy for now, replace with actual game load)
+          game <- loadGame "game_state.txt"
+          if isLegalMove game move
+            then do
+              let newGame = makeMove game move
+              if verbose
+                then do
+                  putStrLn $ "Move: " ++ show move
+                  printOutcome game move
+                  putStrLn $ showGame newGame
+                else putStrLn $ showGame newGame
+            else putStrLn "Illegal move"
+
+-- Helper to get the value of a flag
+getFlagValue :: String -> [String] -> Maybe String
+getFlagValue flag args =
+  case dropWhile (/= flag) args of
+    (_:value:_) -> Just value
+    _ -> Nothing
+
+-- Parse move from string (1-indexed to 0-indexed)
+parseMove :: String -> Maybe Move
+parseMove str =
+  let parts = splitOn ',' str
+  in case parts of
+       [x, y, "H"] -> Just ((read x - 1, read y - 1), Horizontal)
+       [x, y, "V"] -> Just ((read x - 1, read y - 1), Vertical)
+       _ -> Nothing
+
+-- Helper to split string by a delimiter
+splitOn :: Char -> String -> [String]
+splitOn delim str = case break (== delim) str of
+  (a, _:b) -> a : splitOn delim b
+  (a, "") -> [a]
