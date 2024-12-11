@@ -452,8 +452,8 @@ handleFlags args = do
       case parseMove moveStr of
         Nothing -> putStrLn "Error: Invalid move format. Expected format: x,y,H or x,y,V"
         Just move -> do
-          -- Load game state (dummy for now, replace with actual game load)
-          game <- loadGame "game_state.txt"
+          -- gameState1 for example
+          game <- loadGame "gameState1.txt"
           if isLegalMove game move
             then do
               let newGame = makeMove game move
@@ -465,14 +465,15 @@ handleFlags args = do
                 else putStrLn $ showGame newGame
             else putStrLn "Illegal move"
 
--- Helper to get the value of a flag
+
+-- helper to get flag value 
 getFlagValue :: String -> [String] -> Maybe String
 getFlagValue flag args =
   case dropWhile (/= flag) args of
     (_:value:_) -> Just value
     _ -> Nothing
 
--- Parse move from string (1-indexed to 0-indexed)
+-- parse move from string (1-indexed to 0-indexed)
 parseMove :: String -> Maybe Move
 parseMove str =
   let parts = splitOn ',' str
@@ -481,7 +482,7 @@ parseMove str =
        [x, y, "V"] -> Just ((read x - 1, read y - 1), Vertical)
        _ -> Nothing
 
--- Helper to split string by a delimiter
+-- helper to split string by a delimiter
 splitOn :: Char -> String -> [String]
 splitOn delim str = case break (== delim) str of
   (a, _:b) -> a : splitOn delim b
