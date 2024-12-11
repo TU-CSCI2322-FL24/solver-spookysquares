@@ -1,10 +1,9 @@
-module SpookySquare where
 import Data.List
 import Data.Ord (comparing)
 import Data.List (isPrefixOf)
 import Text.XHtml (input)
-
-
+import Distribution.Simple.LocalBuildInfo (depLibraryPaths)
+import Data.Aeson.Encoding (bool)
 
 
 type Point = (Int, Int)
@@ -19,6 +18,7 @@ type Game = (Board, Player, [Box], [Move])
 data Player = PlayerOne | PlayerTwo deriving (Eq, Show)
 type Move = Line
 data Winner = Winner Player | Draw deriving (Eq, Show)
+
 --calcBoard to create a board from a given int size (always a perfect square)
 calcBoard :: Int -> Board
 calcBoard size = ([((x,y), Horizontal) | x <- [0..size - 1], y <- [0..size]] ++ [((x,y), Vertical) | x <- [0..size], y <- [0..size - 1]])
@@ -349,6 +349,42 @@ showMoveHist moves =
   "moveHistory " ++ unwords (map showLine moves)
 
 
+  -- Story 14 
+
+-- write  game state to a file
+
+writeGame :: Game -> FilePath -> IO ()
+writeGame game filePath = do
+  let gameString = showGame game
+  writeFile filePath gameString
+  putStrLn $ "Game state written to " ++ filePath
+
+
+-- load game state 
+loadGame :: FilePath -> IO Game
+loadGame filePath = do
+  content <- readFile filePath
+  let game = readGame content
+  putStrLn "Game state loaded successfully!"
+  return game
+
+
+-- calculate and print best move fr player 
+putBestMove :: Game -> IO ()
+putBestMove game = do
+  let move = bestMove game -- bestMove placeholder (not implemented yet)
+  putStrLn $ "Best Move: " ++ show move
+  printOutcome game move
+
+-- helper to print outcome of a move
+printOutcome :: Game -> Move -> IO ()
+printOutcome game move =
+  let result = gameWinner (makeMove game move)
+  in case result of
+       Just (Winner PlayerOne) -> putStrLn "This move forces a win for PlayerOne"
+       Just (Winner PlayerTwo) -> putStrLn "This move forces a win for PlayerTwo"
+       Nothing -> putStrLn "This move forces a tie"
+
 --story 17: Rate game function
 rateGame :: Game -> Rating
 rateGame game@(board, currentPlayer, boxes, moveHistory) =
@@ -385,46 +421,3 @@ whoMightWin game depth
     isWinningOutcome :: Rating -> Player -> Bool
     isWinningOutcome rating PlayerOne = rating == maxBound
     isWinningOutcome rating PlayerTwo = rating == minBound
-
--- calculate and print best move fr player 
-putBestMove :: Game -> IO ()
-putBestMove game = do
-    let move = bestMove game
-    putStrLn $ "Best Move: " ++ show move
-    printOutcome game move
-
--- helper to print outcome of a move
-printOutcome :: Game -> Move -> IO ()
-printOutcome game move =
-  let result = gameWinner (makeMove game move)
-  in case result of
-       Just (Winner PlayerOne) -> putStrLn "This move forces a win for PlayerOne"
-       Just (Winner PlayerTwo) -> putStrLn "This move forces a win for PlayerTwo"
-       Just Draw -> putStrLn "This move forces a tie"
-       Nothing -> putStrLn "Game is in Progress"
-
--- write  game state to a file
-
-writeGame :: Game -> FilePath -> IO ()
-writeGame game filePath = do
-  let gameString = showGame game
-  writeFile filePath gameString
-  putStrLn $ "Game state written to " ++ filePath
-
-
--- load game state 
-loadGame :: FilePath -> IO (Maybe Game)
-loadGame filePath = do
-  content <- readFile filePath
-  let game = readGame content
-  putStrLn "Game state loaded successfully!"
-  return (Just game)
-
---story 23/24:
-
--- parseArgs :: [String] -> IO ([Flag], [String])
--- parseArgs args = case getOpt Permute options args of
---   (opts, nonOpts, []) -> return (opts, nonOpts)
---   (_, _, errs) -> ioError (userError (concat errs ++ usageInfo header options))
---   where
---     header = "spookySuqares [OPTIONS]"
