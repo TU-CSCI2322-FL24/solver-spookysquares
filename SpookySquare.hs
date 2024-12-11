@@ -3,6 +3,8 @@ module SpookySquare where
 import Data.List
 import Data.Ord
 
+import Data.List.Split
+
 type Point = (Int, Int)
 type Line = (Point, Direction)
 data Direction = Vertical | Horizontal deriving (Eq, Show)
@@ -271,7 +273,7 @@ parseLines str =
 
 parseLine :: String -> Line
 parseLine str = 
-  let (x:y:d:_) = splitOn ',' str
+  let (x:y:d:_) = splitOn "," str
   in ((read x, read y), parseDirection d)
 
 parseDirection :: String -> Direction
@@ -279,14 +281,9 @@ parseDirection "H" = Horizontal
 parseDirection "V" = Vertical
 parseDirection _ = error "Invalid direction"
 
-splitOn :: Char -> String -> [String]
-splitOn delim str = case break (== delim) str of
-  (a, _:b) -> a : splitOn delim b
-  (a, "") -> [a]
-
 parsePlayer :: String -> Player
-parsePlayer "W" = PlayerTwo
-parsePlayer "B" = PlayerOne
+parsePlayer "B" = PlayerTwo
+parsePlayer "W" = PlayerOne
 parsePlayer _ = error "Invalid playyer"
 
 parseBoxes :: String -> [Box]
@@ -296,7 +293,7 @@ parseBoxes str =
 
 parseBox :: String -> Box
 parseBox str = 
-  let (x:y:p:_) = splitOn ',' str
+  let (x:y:p:_) = splitOn "," str
       player = parsePlayer p
   in ((read x, read y), player)
 
@@ -314,7 +311,7 @@ showGame (board, player, boxes, moves) =
 -- board lines to allLines format
 showAllLines :: Board -> String
 showAllLines board =
-  "allLines " ++ unwords (map showLine board)
+  unwords (map showLine board)
 
 -- converts line to x,y,H / x,y,V
 showLine :: Line -> String
@@ -325,25 +322,25 @@ showLine ((x,y) , dir) =
 
 -- current player to player1 = B player2 = W format
 showCurrPlayer :: Player -> String
-showCurrPlayer PlayerOne = "player1 = B player2 = W"
-showCurrPlayer PlayerTwo = "player1 = B player2 = W"
+showCurrPlayer PlayerOne = "W"
+showCurrPlayer PlayerTwo = "B"
 
 -- boxes to boxesWon format
 showBoxesWon :: [Box] -> String
 showBoxesWon boxes = 
-  "boxesWon " ++ unwords (map showBox boxes)
+  unwords (map showBox boxes)
 
 -- converts box to x,y,W / x,y,B
 showBox :: Box -> String
 showBox ((x,y), player) = 
   show x ++ "," ++ show y ++ "," ++ case player of
-    PlayerOne -> "B"
-    PlayerTwo -> "W"
+    PlayerOne -> "W"
+    PlayerTwo -> "B"
 
 -- converts move hist to moveHist format
 showMoveHist :: [Move] -> String
 showMoveHist moves = 
-  "moveHistory " ++ unwords (map showLine moves)
+  unwords (map showLine moves)
 
 
   -- Story 14 
@@ -420,7 +417,7 @@ whoMightWin game depth
 readMove :: String -> Maybe Move
 readMove str = 
     do 
-      let (x:y:d:_) = splitOn ',' str
+      let (x:y:d:_) = splitOn "," str
       return ((read x, read y), parseDirection d)
 
 winEval :: Winner -> String
