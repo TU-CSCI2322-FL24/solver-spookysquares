@@ -1,10 +1,7 @@
-import Data.List
-import Data.Ord (comparing)
-import Data.List (isPrefixOf)
-import Text.XHtml (input)
-import Distribution.Simple.LocalBuildInfo (depLibraryPaths)
-import Data.Aeson.Encoding (bool)
+module SpookySquare where 
 
+import Data.List
+import Data.Ord
 
 type Point = (Int, Int)
 type Line = (Point, Direction)
@@ -129,7 +126,7 @@ prettyPrint :: Game -> String
 prettyPrint (board, _, boxes, moves) = unlines $ concatMap renderRow [0 .. size]
   where
     -- determine board size dynamically
-    size = 4
+    size = 3
 
 
     -- Render a single row of the game
@@ -357,16 +354,14 @@ writeGame :: Game -> FilePath -> IO ()
 writeGame game filePath = do
   let gameString = showGame game
   writeFile filePath gameString
-  putStrLn $ "Game state written to " ++ filePath
 
 
 -- load game state 
-loadGame :: FilePath -> IO Game
+loadGame :: FilePath -> IO (Maybe Game)
 loadGame filePath = do
   content <- readFile filePath
   let game = readGame content
-  putStrLn "Game state loaded successfully!"
-  return game
+  return (Just game)
 
 
 -- calculate and print best move fr player 
@@ -421,3 +416,20 @@ whoMightWin game depth
     isWinningOutcome :: Rating -> Player -> Bool
     isWinningOutcome rating PlayerOne = rating == maxBound
     isWinningOutcome rating PlayerTwo = rating == minBound
+
+readMove :: String -> Maybe Move
+readMove str = 
+    do 
+      let (x:y:d:_) = splitOn ',' str
+      return ((read x, read y), parseDirection d)
+
+winEval :: Winner -> String
+winEval w = case w of
+    Draw -> "Draw"
+    Winner player -> "Winner:" ++ show player
+
+showBestMove :: Game -> String
+showBestMove game = show (bestMove game)
+
+showMove :: Move -> String
+showMove = show
