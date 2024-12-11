@@ -349,14 +349,6 @@ showMoveHist moves =
   "moveHistory " ++ unwords (map showLine moves)
 
 
-  -- Story 14 
-
-
-
-
--- main IO: reads a file, loads game and prints the best move
-
-
 --story 17: Rate game function
 rateGame :: Game -> Rating
 rateGame game@(board, currentPlayer, boxes, moveHistory) =
@@ -365,6 +357,68 @@ rateGame game@(board, currentPlayer, boxes, moveHistory) =
       score = currentPlayerScore + boxScore
   in score
 
+-- story 18 (and 19)
+-- looks at game state and retrns best rating and corresponding move
+whoMightWin :: Game -> Int -> (Rating, Maybe Move)
+whoMightWin game 0 = (rateGame game, Nothing) --base case
+whoMightWin game depth
+  | null validMoves = (rateGame game, Nothing) --no legal moves
+  | otherwise = search validMoves Nothing (if player == PlayerOne then (minBound) else maxBound)
+  where
+    player = gamePlayer game
+    validMoves = legalMoves game
+
+    search :: [Move] -> Maybe Move -> Rating -> (Rating, Maybe Move)
+    search [] bestMove bestRating = (bestRating, bestMove)
+    search (move:moves) currentBest currentBestRating =
+      let (newRating, _) = whoMightWin (makeMove game move) (depth -1)
+          better = if player == PlayerOne
+                   then newRating > currentBestRating
+                   else newRating < currentBestRating
+          newBest = if better then Just move else currentBest
+          updatedBestRating = if better then newRating else currentBestRating
+      in if isWinningOutcome newRating player
+         then (newRating, Just move)
+         else search moves newBest updatedBestRating
+    
+    -- helper to check if a rating is a winning outcome
+    isWinningOutcome :: Rating -> Player -> Bool
+    isWinningOutcome rating PlayerOne = rating == maxBound
+    isWinningOutcome rating PlayerTwo = rating == minBound
+
+-- calculate and print best move fr player 
+putBestMove :: Game -> IO ()
+putBestMove game = do
+    let move = bestMove game
+    putStrLn $ "Best Move: " ++ show move
+    printOutcome game move
+
+-- helper to print outcome of a move
+printOutcome :: Game -> Move -> IO ()
+printOutcome game move =
+  let result = gameWinner (makeMove game move)
+  in case result of
+       Just (Winner PlayerOne) -> putStrLn "This move forces a win for PlayerOne"
+       Just (Winner PlayerTwo) -> putStrLn "This move forces a win for PlayerTwo"
+       Just Draw -> putStrLn "This move forces a tie"
+       Nothing -> putStrLn "Game is in Progress"
+
+-- write  game state to a file
+
+writeGame :: Game -> FilePath -> IO ()
+writeGame game filePath = do
+  let gameString = showGame game
+  writeFile filePath gameString
+  putStrLn $ "Game state written to " ++ filePath
+
+
+-- load game state 
+loadGame :: FilePath -> IO (Maybe Game)
+loadGame filePath = do
+  content <- readFile filePath
+  let game = readGame content
+  putStrLn "Game state loaded successfully!"
+  return (Just game)
 
 --story 23/24:
 
